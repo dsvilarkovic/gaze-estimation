@@ -104,7 +104,7 @@ id = int(sys.argv[1])
 batch_size = int(sys.argv[2])
 
 output_file = 'log_results/multimodal_log_%d_%d.txt' % (id, batch_size)
-output_model_file = 'log_results/multimodal_model_%d_%d.py' % (id, batch_size)
+output_model_file = 'log_results/multimodal_model_%d_%d' % (id, batch_size)
 
 net = train.train_model(optimizer,output_model_file, net, face_landmarks_dataset , 100, 1, False, batch_size = batch_size, output_file = output_file)
 torch.save(net.state_dict(), output_model_file)
