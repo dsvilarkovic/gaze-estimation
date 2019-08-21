@@ -12,6 +12,8 @@ import sendmail
 import test as test
 from face_landmark_dataset import FaceLandmarksDataset
 import numpy as np
+from scipy.io import loadmat
+
 
 
 def extract_data(indices, suffix = '', include_pos = True):
@@ -86,8 +88,8 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
 
     (test_ftrs, test_gz, test_eye_reg, test_img_loc) = extract_data(test_indices)
 
-    print(test_gz.shape)
-    print(test_ftrs.shape)
+#     print(test_gz.shape)
+#     print(test_ftrs.shape)
 
     x_test = test_ftrs
     y_test = test_gz
@@ -161,6 +163,7 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
         test_accuracy = test.test_model(optimizer,net, test_face_landmarks_dataset, 256)
 
         sendmail.sendmail_content(content + ' \t | ' + ' Test accuracy is ' + str(test_accuracy))
+        f.write(content + ' \t | ' + ' Test accuracy is ' + str(test_accuracy))
 
         f.write(content)
       
