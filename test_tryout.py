@@ -92,16 +92,20 @@ print(test_ftrs.shape)
 x_test = test_ftrs
 y_test = test_gz
 
-test_face_landmarks_dataset = FaceLandmarksDataset(ftrs = test_ftrs[12000:18000], eye_regions=test_eye_reg.cuda()[12000:18000], locations=test_img_loc[12000:18000],  gz = test_gz.cuda()[12000:18000], train_transforms=None, test_transforms=None, load_type='test')
+# test_face_landmarks_dataset = FaceLandmarksDataset(ftrs = test_ftrs[12000:18000], eye_regions=test_eye_reg.cuda()[12000:18000], locations=test_img_loc[12000:18000],  gz = test_gz.cuda()[12000:18000], train_transforms=None, test_transforms=None, load_type='test')
+test_face_landmarks_dataset = FaceLandmarksDataset(ftrs = test_ftrs, eye_regions=test_eye_reg.cuda(), locations=test_img_loc,  gz = test_gz.cuda(), train_transforms=None, test_transforms=None, load_type='test')
 
 (net,optimizer) = mmnn.get_net_instance()
 
-net.load_state_dict(torch.load('log_results/multimodal_model_16_64.py'))
+test_models = range(15,25)
+
+for test_model in test_models:
+    net.load_state_dict(torch.load('log_results/multimodal_model_18_128_epoch_%d.py' % (test_model)))
 
 
-sendmail.sendmail_content('Testing started')
+    sendmail.sendmail_content('Testing started')
 
-# (error, accuracy) = test_model(net, test_ftrs, test_gz)
-accuracy = test.test_model(optimizer,net, test_face_landmarks_dataset, 256)
+    # (error, accuracy) = test_model(net, test_ftrs, test_gz)
+    accuracy = test.test_model(optimizer,net, test_face_landmarks_dataset, 256)
 
-sendmail.sendmail_content('Accuracy is ' + str(accuracy))
+    sendmail.sendmail_content('Accuracy is ' + str(accuracy))
