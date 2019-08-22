@@ -6,6 +6,7 @@ from scipy.io import loadmat
 import multi_modal_nn as mmnn
 from face_landmark_dataset import FaceLandmarksDataset
 import sys
+import os
 
 
 def extract_data(indices, suffix = '', include_pos = True):
@@ -103,9 +104,18 @@ y.requires_grad = False
 id = int(sys.argv[1])
 batch_size = int(sys.argv[2])
 
-output_file = 'log_results/multimodal_log_%d_%d.txt' % (id, batch_size)
-output_model_file = 'log_results/multimodal_model_%d_%d' % (id, batch_size)
 
-net = train.train_model(optimizer,output_model_file, net, face_landmarks_dataset , 30, 1, False, batch_size = batch_size, output_file = output_file)
+
+
+try:
+#     os.mkdir('log_results/%d' % (id))
+    os.mkdir('log_results/%d/models' % (id))
+except OSError:
+    print ("Creation of the directory %s failed" % path)
+
+output_file = 'log_results/%d/multimodal_log_%d_%d.txt' % (id, id, batch_size)
+output_model_file = 'log_results/%d/models/multimodal_model_%d_%d' % (id, id, batch_size)
+
+net = train.train_model(optimizer,output_model_file, net, face_landmarks_dataset , 20, 1, False, batch_size = batch_size, output_file = output_file, train_id = id)
 torch.save(net.state_dict(), output_model_file)
 
