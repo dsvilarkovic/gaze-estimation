@@ -5,9 +5,11 @@ import torch.optim as optim
 
 feature_size = 136
 output_size = 1
-image_unit_out = 1200
-image_height = 54
-image_width = 108
+image_unit_out = 1024
+# image_height = 54
+image_height = 56
+# image_width = 108
+image_width = 112
 optimizer = None
 
 class LandmarkUnit(nn.Module):
@@ -28,8 +30,8 @@ class LandmarkUnit(nn.Module):
 
 
     def forward(self, x):
-#         x[0:135:2] = x[0:135:2] / 608.0
-#         x[1:136:2] = x[1:136:2] / 342.0
+        x[0:135:2] = x[0:135:2] / 608.0
+        x[1:136:2] = x[1:136:2] / 342.0
         
         x = self.fc1(x)
         x = self.relu(x)
@@ -50,26 +52,43 @@ class ImageUnit(nn.Module):
         self.image_height = image_height
         self.image_width = image_width
      
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
         self.relu1 = nn.ReLU()
 
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv2 = nn.Conv2d(in_channels=12, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
         self.relu2 = nn.ReLU()
 
-        self.pool = nn.MaxPool2d(kernel_size=(2,4))
+        self.pool1 = nn.MaxPool2d(kernel_size=(2,2))
 
-        self.conv3 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv3 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
         self.relu3 = nn.ReLU()
 
-        self.conv4 = nn.Conv2d(in_channels=12, out_channels=12, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv4 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        
+        
         self.relu4 = nn.ReLU()
+
+        self.conv5 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu5 = nn.ReLU()
+        
+        self.conv6 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu6 = nn.ReLU()
+        
+        self.pool2 = nn.MaxPool2d(kernel_size=(2,2))
+
+        self.conv7 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu7 = nn.ReLU()
+        
+        self.conv8 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu8 = nn.ReLU()
+        
+        self.pool3 = nn.MaxPool2d(kernel_size=(2,2))
 
 #         self.fc = nn.Linear(in_features=image_dim/2 * image_dim/2 * 12, out_features=1)
     
 #         self.fc = nn.Linear(in_features=image_dim/2 * image_dim/4 * 12, out_features=image_unit_out)
         self.fc = nn.Linear(in_features=self.get_final_output_size(), out_features=image_unit_out)
 
-        self.relu5 = nn.ReLU()
 
         self.out = nn.Sigmoid()
         
@@ -87,7 +106,7 @@ class ImageUnit(nn.Module):
 
         output = self.relu2(output)
 
-        output = self.pool(output)
+        output = self.pool1(output)
 #         print('Slika-oblik posle pool', output.shape)
 
         output = self.conv3(output)
@@ -97,6 +116,25 @@ class ImageUnit(nn.Module):
 
         output = self.conv4(output)
         output = self.relu4(output)
+        
+        output = self.pool2(output)
+        
+        output = self.conv5(output)
+        output = self.relu5(output)
+        
+        output = self.conv6(output)
+        output = self.relu6(output)
+        
+        output = self.pool2(output)
+
+        output = self.conv7(output)
+        output = self.relu7(output)
+
+        output = self.conv8(output)
+        output = self.relu8(output)
+
+        output = self.pool2(output)
+
 #         print('Slika-oblik posle conv4', output.shape)
 
 
@@ -112,7 +150,7 @@ class ImageUnit(nn.Module):
 #         return self.out(output)
 
     def get_final_output_size(self):
-        return self.image_height/2 * self.image_width/4 * 12
+        return self.image_height/2/2/2 * self.image_width/2/2/2 * 24
 
 class MultiModalNetwork(nn.Module):
     def __init__(self, image_height, image_width):
@@ -164,7 +202,9 @@ class MultiModalNetwork(nn.Module):
         landmarksUnitOut = self.forward_landmarks(landmarks)
         
         
-#         print(imageUnitOut.shape, landmarksUnitOut.shape)
+        print(imageUnitOut.shape, landmarksUnitOut.shape)
+
+  
         output = torch.cat((imageUnitOut,landmarksUnitOut), dim = 1)
         
         
