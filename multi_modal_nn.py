@@ -52,37 +52,38 @@ class ImageUnit(nn.Module):
         self.image_height = image_height
         self.image_width = image_width
      
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3,5), stride=1, padding= (1, 2))
         self.relu1 = nn.ReLU()
 
-        self.conv2 = nn.Conv2d(in_channels=12, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3,5), stride=1, padding= (1, 2))
         self.relu2 = nn.ReLU()
 
         self.pool1 = nn.MaxPool2d(kernel_size=(2,2))
 
-        self.conv3 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,5), stride=1, padding=(1, 2))
         self.relu3 = nn.ReLU()
 
-        self.conv4 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
-        
-        
-        self.relu4 = nn.ReLU()
-
-        self.conv5 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
-        self.relu5 = nn.ReLU()
-        
-        self.conv6 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
-        self.relu6 = nn.ReLU()
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,5), stride=1, padding=(1, 2))
         
         self.pool2 = nn.MaxPool2d(kernel_size=(2,2))
 
-        self.conv7 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu4 = nn.ReLU()
+
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu5 = nn.ReLU()
+        
+        self.conv6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.relu6 = nn.ReLU()
+
+        self.pool3 = nn.MaxPool2d(kernel_size=(2,2))
+
+        self.conv7 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3,5), stride=1, padding=(1, 2))
         self.relu7 = nn.ReLU()
         
-        self.conv8 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv8 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,5), stride=1, padding=(1, 2))
         self.relu8 = nn.ReLU()
         
-        self.pool3 = nn.MaxPool2d(kernel_size=(2,2))
+        self.pool4 = nn.MaxPool2d(kernel_size=(2,2))
 
 #         self.fc = nn.Linear(in_features=image_dim/2 * image_dim/2 * 12, out_features=1)
     
@@ -98,42 +99,43 @@ class ImageUnit(nn.Module):
     def forward(self,image):
 #         print('Slika-oblik', image.shape)
         output = self.conv1(image)
-#         print('Slika-oblik posle conv1', output.shape)
         output = self.relu1(output)
 
         output = self.conv2(output)
-#         print('Slika-oblik posle conv2', output.shape)
 
         output = self.relu2(output)
 
         output = self.pool1(output)
-#         print('Slika-oblik posle pool', output.shape)
 
         output = self.conv3(output)
-#         print('Slika-oblik posle conv3', output.shape)
 
         output = self.relu3(output)
 
         output = self.conv4(output)
+
         output = self.relu4(output)
         
         output = self.pool2(output)
-        
+
         output = self.conv5(output)
+
         output = self.relu5(output)
         
         output = self.conv6(output)
+
         output = self.relu6(output)
         
-        output = self.pool2(output)
+        output = self.pool3(output)
 
         output = self.conv7(output)
         output = self.relu7(output)
 
         output = self.conv8(output)
         output = self.relu8(output)
+      
 
-        output = self.pool2(output)
+        output = self.pool4(output)
+        
 
 #         print('Slika-oblik posle conv4', output.shape)
 
@@ -150,7 +152,7 @@ class ImageUnit(nn.Module):
 #         return self.out(output)
 
     def get_final_output_size(self):
-        return self.image_height/2/2/2 * self.image_width/2/2/2 * 24
+        return self.image_height/2/2/2/2 * self.image_width/2/2/2/2 * 256
 
 class MultiModalNetwork(nn.Module):
     def __init__(self, image_height, image_width):
