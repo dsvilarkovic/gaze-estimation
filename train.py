@@ -13,6 +13,8 @@ import test as test
 from face_landmark_dataset import FaceLandmarksDataset
 import numpy as np
 from scipy.io import loadmat
+from sklearn.metrics import confusion_matrix
+
 
 
 
@@ -96,6 +98,8 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
     test_face_landmarks_dataset = FaceLandmarksDataset(ftrs = test_ftrs[12000:18000], eye_regions=test_eye_reg.cuda()[12000:18000], locations=test_img_loc[12000:18000],  gz = test_gz.cuda()[12000:18000], train_transforms=None, test_transforms=None, load_type='test')
 
     for epochs in range(epochs_count):
+      total_correct = 0
+
 #       dataset = torch.utils.data.TensorDataset(x,y)
 #       trainloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
       trainloader = torch.utils.data.DataLoader(dataset=face_landmarks_dataset , batch_size=batch_size, shuffle=True)
@@ -144,7 +148,11 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
 
           yhat = yhat > 0.5
           accuracy = accuracy_score(yhat.cpu().data.numpy(), y_batch.cpu().numpy())
-            
+           
+          tn, fp, fn, tp = confusion_matrix(yhat.cpu().numpy(), y_batch.cpu()).ravel()
+          total_correct = total_correct + tp + tn
+        
+          f.write('Total correct predicted number is %d out of %d' % (tp + tn, batch_size))
             
 
           f.write('This batch accuracy is %f %% \t' % (100.0 * accuracy))
@@ -158,7 +166,9 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
 
       if(epochs % view_step == 0):
         pid = os.getpid()
-        content = 'Proces ID %d: Epoch %d loss is %f accuracy is: %f \n' % (pid, epochs, output_loss.item(), accuracy)
+        
+        epoch_accuracy = 100.0 * total_correct / len(face_landmarks_dataset)
+        content = 'Proces ID %d: Epoch %d loss is %f accuracy is: %f \n' % (pid, epochs, output_loss.item(), epoch_accuracy)
 
         test_accuracy = test.test_model(optimizer,net, test_face_landmarks_dataset, 256)
 
