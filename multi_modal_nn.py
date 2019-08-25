@@ -267,7 +267,7 @@ def get_net_instance():
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum = 0.9)
 #     scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.00001, max_lr=0.0001)
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = torch.optim.StepLR(optimizer, step_size=10, gamma=0.1)
 
     return (net,optimizer, scheduler)
 
