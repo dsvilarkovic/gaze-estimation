@@ -17,31 +17,47 @@ class LandmarkUnit(nn.Module):
         super(LandmarkUnit, self).__init__()
 
         self.fc1 = nn.Linear(feature_size, int(feature_size/2))  
+        self.fc1_bn = nn.BatchNorm1d(int(feature_size/2))
+
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(int(feature_size/2), int(feature_size/2))
+        self.fc2_bn = nn.BatchNorm1d(int(feature_size/2))
+
 
         self.fc3 = nn.Linear(int(feature_size/2), int(feature_size/4))
+        self.fc3_bn = nn.BatchNorm1d(int(feature_size/4))
 
         self.fc5 = nn.Linear(int(feature_size/4), output_size)
 #         self.fc5 = nn.Linear(int(feature_size/4), int(feature_size/4))
+        self.fc5_bn = nn.BatchNorm1d(int(feature_size/4))
 
 
         self.out = nn.Sigmoid()
 
 
     def forward(self, x):
-#         x[0:135:2] = x[0:135:2] / 608.0
-#         x[1:136:2] = x[1:136:2] / 342.0
+        x[0:135:2] = x[0:135:2] / 608.0
+        x[1:136:2] = x[1:136:2] / 342.0
         
         x = self.fc1(x)
+        x = self.fc1_bn(x)
         x = self.relu(x)
+        
         x = self.fc2(x)
+        x = self.fc2_bn(x)
         x = self.relu(x)
+        
         x = self.fc3(x)
+        x = self.fc3_bn(x)
         x = self.relu(x)
+        
+        
+        
         x = self.fc5(x)
+        x = self.fc5_bn(x)
+
 #         x = self.out(x)
-        return x
+        return self.relu(x)
 
 
 class ImageUnit(nn.Module):
@@ -53,28 +69,35 @@ class ImageUnit(nn.Module):
         self.image_width = image_width
      
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv1_bn = nn.BatchNorm2d(12)
         self.relu1 = nn.ReLU()
 
         self.conv2 = nn.Conv2d(in_channels=12, out_channels=12, kernel_size=(3,5), stride=1, padding= (1, 2))
+        self.conv2_bn = nn.BatchNorm2d(12)
         self.relu2 = nn.ReLU()
 
         self.pool1 = nn.MaxPool2d(kernel_size=(2,2))
 
         self.conv3 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv3_bn = nn.BatchNorm2d(24)
         self.relu3 = nn.ReLU()
 
         self.conv4 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
-        
-        
+        self.conv4_bn = nn.BatchNorm2d(24)        
         self.relu4 = nn.ReLU()
 
+        self.pool2 = nn.MaxPool2d(kernel_size=(2,2))
+
         self.conv5 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv5_bn = nn.BatchNorm2d(24)
         self.relu5 = nn.ReLU()
         
         self.conv6 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=(3,5), stride=1, padding=(1, 2))
+        self.conv6_bn = nn.BatchNorm2d(24)
         self.relu6 = nn.ReLU()
         
-        self.pool2 = nn.MaxPool2d(kernel_size=(2,2))
+
+        self.pool3 = nn.MaxPool2d(kernel_size=(2,2))
 
 #         self.fc = nn.Linear(in_features=image_dim/2 * image_dim/2 * 12, out_features=1)
     
@@ -88,36 +111,35 @@ class ImageUnit(nn.Module):
         self.dropout05 = nn.Dropout(0.5)
         
     def forward(self,image):
-#         print('Slika-oblik', image.shape)
         output = self.conv1(image)
-#         print('Slika-oblik posle conv1', output.shape)
+        output = self.conv1_bn(output)
         output = self.relu1(output)
 
         output = self.conv2(output)
-#         print('Slika-oblik posle conv2', output.shape)
-
+        output = self.conv2_bn(output)
         output = self.relu2(output)
 
         output = self.pool1(output)
-#         print('Slika-oblik posle pool', output.shape)
 
         output = self.conv3(output)
-#         print('Slika-oblik posle conv3', output.shape)
-
+        output = self.conv3_bn(output)
         output = self.relu3(output)
 
         output = self.conv4(output)
+        output = self.conv4_bn(output)
         output = self.relu4(output)
         
         output = self.pool2(output)
-        
+
         output = self.conv5(output)
+        output = self.conv5_bn(output)
         output = self.relu5(output)
         
         output = self.conv6(output)
+        output = self.conv6_bn(output)
         output = self.relu6(output)
         
-        output = self.pool2(output)
+        output = self.pool3(output)
 
 #         print('Slika-oblik posle conv4', output.shape)
 
@@ -169,18 +191,10 @@ class MultiModalNetwork(nn.Module):
     
     def forward(self, x):
         landmarks = x[:, 0:136]
-        #SLIKA
         image = x[:, 136:].view(-1, image_height, image_width, 3) #NOVO
         image = image.permute(0,3,1,2) #NOVO
 
         
-#         plt.imshow(image.permute(0,3,2,1).cpu().numpy()[0,:,:,:])
-        
-#         print('Image ', image.shape)
-        
-#         print('Landmarks ', landmarks.shape)
-
-#         print(output.shape)
         imageUnitOut = self.forward_image(image)
     
         landmarksUnitOut = self.forward_landmarks(landmarks)
@@ -224,6 +238,8 @@ def get_net_instance():
 #     net.landmarkUnit.fc5.train()
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+
     
     return (net,optimizer)
 
