@@ -30,7 +30,9 @@ class LandmarkUnit(nn.Module):
 
         
         self.fc5 = nn.Linear(int(feature_size/4), output_size)
-        self.fc5_bn = nn.BatchNorm1d(output_size)
+#         self.fc5_bn = nn.BatchNorm1d(output_size)  #ovo je retrenirano
+        self.fc5_bn = nn.BatchNorm1d(int(feature_size/4))
+
 
 
         self.relu = nn.ReLU()
@@ -267,7 +269,7 @@ def get_net_instance():
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum = 0.9)
 #     scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.00001, max_lr=0.0001)
-    scheduler = torch.optim.StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     return (net,optimizer, scheduler)
 
