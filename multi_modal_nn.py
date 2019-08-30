@@ -228,7 +228,71 @@ def get_net_instance():
     return (net,optimizer)
 
 
+def lr_finder(optimizer, net, face_landmarks_dataset, epochs_count = 10, 
+              view_step = 10, include_graph = False, batch_size = 32768, 
+              lr_begin = 0.00001, lr_step = 2):
 
+    net.train()
+    
+    lr_lambda = lambda x: lr_step*x
+    optimizer = torch.optim.SGD(net.parameters(), lr_begin)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+    
+    
+    errors_array = []
+    lr_array = []
+    
+
+        
+        
+    for epochs in range(epochs_count):
+      total_correct = 0
+
+      trainloader = torch.utils.data.DataLoader(dataset=face_landmarks_dataset , batch_size=batch_size, shuffle=True)
+    
+
+      for i, (train_batch) in enumerate(trainloader):
+           
+            
+          (x_batch, y_batch) = train_batch
+          optimizer.zero_grad()
+          yhat = torch.Tensor()
+        
+          yhat = yhat.type(torch.cuda.FloatTensor)  
+            
+            
+          yhat = net(x_batch) 
+
+          loss = nn.BCELoss()
+            
+#           print('tip', type(yhat), 'tip2', type(y_batch), 'tip3 ' , type(x_batch))
+#           print(yhat.shape, y_batch.shape)
+          output_loss = loss(yhat, y_batch)
+
+          output_loss.backward()
+        
+          errors_array.append(output_loss)
+          lr_array.append(optimizer.state_dict()["param_groups"][0]['lr'])
+        
+          optimizer.step()
+          scheduler.step()
+
+
+
+          yhat = yhat > 0.5
+          accuracy = accuracy_score(yhat.cpu().data.numpy(), y_batch.cpu().numpy())
+          
+          print("Completed batch, accuracy is %f, lr is %f, loss is %f" % (accuracy, optimizer.state_dict()["param_groups"][0]['lr'], output_loss.item()))
+
+
+    loss_total = list(map(lambda x: x.cpu().item(), errors_array))
+      
+
+    if(include_graph):
+      plt.xlabel('Learning rates')
+      plt.ylabel('Errors')
+      plt.plot(lr_array, errors_array)
+    
 
 
 
