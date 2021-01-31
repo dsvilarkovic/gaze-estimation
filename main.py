@@ -84,7 +84,7 @@ test_gz = torch.Tensor().cuda()
 
 #----------------------------------------------
 
-(net,optimizer) = mmnn.get_net_instance()
+(net,optimizer, scheduler) = mmnn.get_net_instance()
 face_landmarks_dataset = FaceLandmarksDataset(ftrs = ftrs, eye_regions= eye_reg.cuda(), locations=img_loc,  gz = gz.cuda(), train_transforms=None, test_transforms=None)
 
 
@@ -111,11 +111,14 @@ try:
 #     os.mkdir('log_results/%d' % (id))
     os.mkdir('log_results/%d/models' % (id))
 except OSError:
-    print ("Creation of the directory %s failed" % path)
+    print ("Already exists")
 
 output_file = 'log_results/%d/multimodal_log_%d_%d.txt' % (id, id, batch_size)
 output_model_file = 'log_results/%d/models/multimodal_model_%d_%d' % (id, id, batch_size)
 
-net = train.train_model(optimizer,output_model_file, net, face_landmarks_dataset , 20, 1, False, batch_size = batch_size, output_file = output_file, train_id = id)
+    
+net.load_state_dict(torch.load('log_results/22/models/multimodal_model_22_512_epoch_19.py'))
+
+net = train.train_model(scheduler, optimizer,output_model_file, net, face_landmarks_dataset , 60, 1, False, batch_size = batch_size, output_file = output_file, train_id = id)
 torch.save(net.state_dict(), output_model_file)
 

@@ -71,7 +71,7 @@ def extract_data(indices, suffix = '', include_pos = True):
   return(ftrs, gz, eye_reg, img_loc)
 
 
-def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs_count = 10, view_step = 10, include_graph = False, batch_size = 32768, output_file = 'multimodal_log.txt', train_id = 0):
+def train_model(scheduler, optimizer,output_model_file, net, face_landmarks_dataset, epochs_count = 10, view_step = 10, include_graph = False, batch_size = 32768, output_file = 'multimodal_log.txt', train_id = 0):
     f = open(output_file, 'w') 
     
     net.train()
@@ -142,6 +142,8 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
           output_loss = loss(yhat, y_batch)
 
           output_loss.backward()
+        
+        
           optimizer.step()
             
 
@@ -163,7 +165,7 @@ def train_model(optimizer,output_model_file, net, face_landmarks_dataset, epochs
 
 
             
-
+      scheduler.step()
       if(epochs % view_step == 0):
         pid = os.getpid()
         
